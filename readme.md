@@ -5,12 +5,13 @@ Download any subcribed course from your account
 
 use -g param so you can use it anywhere in your computer
 ```bash
-npm i -g udemydl
-cd any-foldeder
-udemydl
+npm i -g udemy-downloader
 ```
 
-For easy locate cmd just go to any folder then in path bar just type <kbd>cmd</kbd> and hit enter
+to use the tools just type (<kbd>udemydl</kbd>) in cmd.
+the directory where you type will be where it saved.
+
+For easy locate cmd just go to any folder then in path bar just type (<kbd>cmd</kbd>) and hit enter
 
 ![opening_cmd](https://i.ibb.co.com/XpshtXv/Screenshot-2024-07-31-171026.png)
 
