@@ -1,6 +1,6 @@
 {
   "name": "udemy-downloader",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Udemy Course Downloader",
   "main": "src/index.js",
   "bin": {
