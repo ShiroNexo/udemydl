@@ -5,7 +5,10 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
-const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8'));
+let config = {};
+try {
+    config = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8'));
+} catch (e) {}
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -181,12 +184,12 @@ async function processCourses(index, courseId, groupList, coursePath) {
         if (!qualitys.includes(item.label)) qualitys.push(item.label)
     })
     
-    let quality = await question(`\n- ${qualitys.join('P\n- ')}P\nEnter the quality you want to download (ex: 480P): `) || '480P';
-    quality = quality.toUpperCase().replace('P', '')
+    let quality = await question(`\n${qualitys.map((quality) => `${qualitys.indexOf(quality) + 1}. ${quality}P`).join('\n')}P\nSelect quality you want to download (e.g., 1): `);
+    quality = qualitys[quality] || qualitys[0]
 
     const subtitles = gdata.asset.captions
     let capSub = subtitles.map((sub, idx) => `${idx + 1}. ${sub.video_label}`).join('\n')
-    let subtitle = await question('\n' + capSub + '\n0. None/No Subtitle\nEnter the subtitle you want to download (ex: 1): ')
+    let subtitle = await question('\n' + capSub + '\n0. None/No Subtitle\n\nEnter the subtitle you want to download (e.g., 1): ')
     subtitle = !subtitle || subtitle === 0 ? null : subtitles[parseInt(subtitle) - 1]
 
     if (curri === 0) {
@@ -200,8 +203,9 @@ async function processCourses(index, courseId, groupList, coursePath) {
             }
             
             let newsub = data.asset.captions.find(sub => sub.locale_id === subtitle.locale_id)
-            const filePath = path.join(groupPath, `${i + 1}_${sanitizeTitle(sections[i].title)}.mp4`);
-            const vttPath = path.join(groupPath, `${newsub.title}`);
+            const filePathName = `${i + 1}_${sanitizeTitle(sections[i].title)}`
+            const filePath = path.join(groupPath, `${filePathName}.mp4`);
+            const vttPath = path.join(groupPath, `${filePathName}.vtt`);
             if (fs.existsSync(filePath)) continue
 
             await downloadSubtitle(newsub.url, vttPath);
@@ -213,13 +217,13 @@ async function processCourses(index, courseId, groupList, coursePath) {
             console.log(`Course ${gdata.id} is not a video`);
             return
         }
-        console.log(subtitle)
         curri = curri - 1
         // Proses section berdasarkan index
         if (curri >= 0 && curri < sections.length) {
             const sec = sections[curri];
-            const filePath = path.join(groupPath, `${curri + 1}_${sanitizeTitle(sec.title)}.mp4`);
-            const vttPath = path.join(groupPath, `${subtitle.title}`);
+            const filePathName = `${curri + 1}_${sanitizeTitle(sec.title)}`
+            const filePath = path.join(groupPath, `${filePathName}.mp4`);
+            const vttPath = path.join(groupPath, `${filePathName}.vtt`);
             if (fs.existsSync(filePath)) return
 
             console.log('\nDownloading Video & Subtitles...');
@@ -260,14 +264,14 @@ async function getUserCourse() {
 async function main() {
     try {
         if (!config.COOKIE) {
-            let newCookie = await question('Enter your cookie (access_token): ');
+            let newCookie = await question('\nUsing right click if you can paste.\nEnter your cookie (access_token): ');
             newCookie.replace('"', '')
             config.COOKIE = newCookie;
             fs.writeFileSync(path.join(__dirname, 'config.json'), JSON.stringify(config, null, 4));
             console.log('Cookie saved!');
         }
 
-        let ask = await question('1. Download Courses\n2. Replace Cookie\n3. exit\n\nSelect option: ');
+        let ask = await question('\n1. Download Courses\n2. Replace Cookie\n3. exit\n\nSelect option: ');
         if (ask === '2') {
             let newCookie = await question('Enter your cookie (access_token): ');
             newCookie.replace('"', '')
@@ -281,7 +285,7 @@ async function main() {
         let caption;
         const listUserCourse = await getUserCourse()
         caption = listUserCourse.map((course, idx) => `${idx + 1}. ${course.title} (${course.id})`).join('\n')
-        const id = await question(`\n[ List Subcribed Course ]\n\n${caption}\n\nSelect course above (ex: 1): `)
+        const id = await question(`\n[ List Subcribed Course ]\n\n${caption}\n\nSelect course above (e.g., 1): `)
 
         const course = listUserCourse[id - 1]
         if (!course) {
@@ -315,7 +319,7 @@ async function main() {
             return cap;
         }).join('');
 
-        let index = await question(`${caption}\n\nSelect lecture above (ex: 1-1): `)
+        let index = await question(`${caption}\n\nSelect lecture above (e.g., 1-1): `)
 
         const regex = /^(\d+-\d+)$/;
 
